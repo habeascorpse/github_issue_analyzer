@@ -1,7 +1,134 @@
-var TaskApp = angular.module('TaskApp',[]);
+var TaskApp = angular.module('TaskApp',['googlechart']);
 
-TaskApp.controller('TaskController', function ($scope, $http) {
+	TaskApp.factory('_', function() {
+		return window._; // assumes underscore has already been loaded on the page
+  });
+
+TaskApp.controller('TaskController', function ($scope, $http,_) {
   $scope.Title = "Github Tasks Analyzer";
+
+  var chartSkeleton = {
+  "type": "PieChart",
+  "displayed": false,
+  "data": {
+    "cols": [
+      {
+        "id": "type",
+        "label": "Type",
+        "type": "string",
+        "p": {}
+      },
+      {
+        "id": "quantity",
+        "label": "Quantity",
+        "type": "number",
+        "p": {}
+      }
+    ],
+    "rows" : [],
+    "options": {
+      "title": "Issues by types",
+      "isStacked": "true",
+      "fill": 20,
+      "displayExactValues": true
+
+    },
+    "formatters": {}
+    }
+  };
+
+
+  $scope.createGraph = function(tasks) {
+    $scope.pType = _.groupBy(tasks.task, function(t) {
+      return t.type;
+    });
+
+    $scope.qType = _.countBy(tasks.task, function(t) {
+      return t.type;
+    });
+
+    var graph1 = [];
+    $scope.graph = [];
+    angular.forEach($scope.pType, function(value, key) {
+        $scope.graph.push({
+          type: key, days: [
+            {
+            value: 0,
+            day : "One",
+            id : 1},
+            {
+            value: 0,
+            day : "Until Five Days",
+            id : 2},
+            {
+            value: 0,
+            day : "More Than Five",
+            id : 3}
+          ]
+
+        });
+
+
+        //Get the Issues closed in one day
+        value.forEach(function(item) {
+          if (item.status == "closed") {
+            if (item.date.getTime() === item.closedTime.getTime()) {
+              _.findWhere($scope.graph, {type: key}).days[0].value++;
+            }
+            else {
+              if (item.closedTime.getTime() < (item.date.getTime() + 5) ) {
+                _.findWhere($scope.graph, {type: key}).days[1].value++;
+              }
+              else {
+                _.findWhere($scope.graph, {type: key}).days[2].value++;
+              }
+            }
+          }
+        })
+    });
+
+    var objChart1 = [];
+    angular.forEach($scope.qType, function(value, key) {
+      objChart1.push({
+        "c":[ {
+              "v": key
+            },
+            {
+              "v": value,
+              "f": value + " items"
+            }
+          ]
+        });
+      });
+
+    $scope.chartObject1 = angular.copy(chartSkeleton);
+    $scope.chartObject1.data.rows = objChart1;
+
+
+    $scope.objCharts = [];
+    var i = 0;
+    angular.forEach($scope.qType, function(value, key) {
+      var otherSkel = angular.copy(chartSkeleton);
+      $scope.objCharts.push(otherSkel);
+
+      _.where($scope.graph, {type: key})[0].days.forEach(function(day) {
+        $scope.objCharts[i].data.rows.push({
+          "c":[ {
+                "v": key
+              },
+              {
+                "v": day.value,
+                "f": day.day
+              }
+            ]
+          });
+        });
+
+        i++;
+      });
+      $scope.showGraph = true;
+
+  };
 
   $scope.downloadTasks = function(max,repository) {
     $scope.tasks = {
@@ -58,11 +185,13 @@ TaskApp.controller('TaskController', function ($scope, $http) {
       // Add object to array
       $scope.tasks.task.push(
         {
-          date : time,
+          date : new Date(time),
           status : status,
-          closedTime : closedTime,
+          closedTime : new Date(closedTime),
           type: type
         });
+
+
     }
   };
 
