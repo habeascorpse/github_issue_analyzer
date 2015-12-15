@@ -7,6 +7,13 @@ var TaskApp = angular.module('TaskApp',['googlechart']);
 TaskApp.controller('TaskController', function ($scope, $http,_) {
   $scope.Title = "Github Tasks Analyzer";
 
+  Date.prototype.addDays = function(days) {
+      var dat = new Date(this.valueOf());
+      dat.setDate(dat.getDate() + days);
+      return dat;
+  }
+
+
   var chartSkeleton = {
   "type": "PieChart",
   "displayed": false,
@@ -30,6 +37,7 @@ TaskApp.controller('TaskController', function ($scope, $http,_) {
       "title": "Issues by types",
       "isStacked": "true",
       "fill": 20,
+      "is3D" : true,
       "displayExactValues": true
 
     },
@@ -58,12 +66,24 @@ TaskApp.controller('TaskController', function ($scope, $http,_) {
             id : 1},
             {
             value: 0,
-            day : "Until Five Days",
+            day : "in Five Days",
             id : 2},
             {
             value: 0,
-            day : "More Than Five",
-            id : 3}
+            day : "in 30 Days",
+            id : 3},
+            {
+            value: 0,
+            day : "in 60 Days",
+            id : 4},
+            {
+            value: 0,
+            day : "in 180 Days",
+            id : 5},
+            {
+            value: 0,
+            day : "More than 180 Days",
+            id : 6}
           ]
 
         });
@@ -76,11 +96,26 @@ TaskApp.controller('TaskController', function ($scope, $http,_) {
               _.findWhere($scope.graph, {type: key}).days[0].value++;
             }
             else {
-              if (item.closedTime.getTime() < (item.date.getTime() + 5) ) {
+              if (item.closedTime.getTime() <= (item.date.addDays(5)) ) {
                 _.findWhere($scope.graph, {type: key}).days[1].value++;
               }
               else {
-                _.findWhere($scope.graph, {type: key}).days[2].value++;
+                if (item.closedTime.getTime() <= (item.date.addDays(30)) ) {
+                  _.findWhere($scope.graph, {type: key}).days[2].value++;
+                }
+                else {
+                  if (item.closedTime.getTime() <= (item.date.addDays(60)) ) {
+                    _.findWhere($scope.graph, {type: key}).days[3].value++;
+                  }
+                  else {
+                    if (item.closedTime.getTime() <= (item.date.addDays(180)) ) {
+                      _.findWhere($scope.graph, {type: key}).days[4].value++;
+                    }
+                    else {
+                      _.findWhere($scope.graph, {type: key}).days[5].value++;
+                    }
+                  }
+                }
               }
             }
           }
@@ -109,16 +144,17 @@ TaskApp.controller('TaskController', function ($scope, $http,_) {
     var i = 0;
     angular.forEach($scope.qType, function(value, key) {
       var otherSkel = angular.copy(chartSkeleton);
+      otherSkel.data.options.title = key;
       $scope.objCharts.push(otherSkel);
 
       _.where($scope.graph, {type: key})[0].days.forEach(function(day) {
         $scope.objCharts[i].data.rows.push({
           "c":[ {
-                "v": key
+                "v": day.day
               },
               {
                 "v": day.value,
-                "f": day.day
+                "f": day.value
               }
             ]
           });
@@ -150,11 +186,12 @@ TaskApp.controller('TaskController', function ($scope, $http,_) {
     if (opened != -1) {
 
       // Get the Date of Open
-      var time = data.substring(opened + 61, opened + 71);
+      var time = data.substring(opened + 61, opened + 81);
       // Verify the satus
       var auxStr = data.search("<div class=\"state state-open\">");
+      var auxInt;
       var status = '';
-      var closedTime
+      var closedTime;
       if (auxStr != -1)
         status = "open";
 
@@ -163,14 +200,19 @@ TaskApp.controller('TaskController', function ($scope, $http,_) {
         // If status are close, then should to get the closed date
         status = "closed";
 
-        auxStr = data.search("closed this ");
-        auxStr = data.substring(auxStr);
-        auxStr = data.search("datetime=\"");
-        closedTime = data.substring(auxStr +10, auxStr+20 );
+        auxInt = data.search("closed this ");
+        if (auxInt != -1) {
+          auxStr = data.substring(auxInt);
+          auxInt = auxStr.search("datetime=\"");
+          closedTime = auxStr.substring(auxInt +10, auxInt+30 );
+        }
+        else {
+          status = "no status";
+        }
       }
 
       // Get the task type
-      var auxInt = data.search("<div class=\"labels css-truncate\">");
+      auxInt = data.search("<div class=\"labels css-truncate\">");
       var type = "no type"
       if (auxInt != -1) {
         auxStr = data.substring(auxInt);
@@ -187,7 +229,7 @@ TaskApp.controller('TaskController', function ($scope, $http,_) {
         {
           date : new Date(time),
           status : status,
-          closedTime : new Date(closedTime),
+          closedTime : closedTime == null ? null : new Date(closedTime),
           type: type
         });
 
