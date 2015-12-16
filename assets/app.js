@@ -47,6 +47,7 @@ TaskApp.controller('TaskController', function ($scope, $http,_) {
 
 
   $scope.createGraph = function(tasks) {
+
     $scope.pType = _.groupBy(tasks.task, function(t) {
       return t.type;
     });
@@ -55,7 +56,6 @@ TaskApp.controller('TaskController', function ($scope, $http,_) {
       return t.type;
     });
 
-    var graph1 = [];
     $scope.graph = [];
     angular.forEach($scope.pType, function(value, key) {
         $scope.graph.push({
@@ -82,8 +82,20 @@ TaskApp.controller('TaskController', function ($scope, $http,_) {
             id : 5},
             {
             value: 0,
-            day : "More than 180 Days",
-            id : 6}
+            day : "In 240 Days",
+            id : 6},
+            {
+            value: 0,
+            day : "In One Year",
+            id : 7},
+            {
+            value: 0,
+            day : "In two Years",
+            id : 8},
+            {
+            value: 0,
+            day : "More than two Years",
+            id : 9}
           ]
 
         });
@@ -112,7 +124,22 @@ TaskApp.controller('TaskController', function ($scope, $http,_) {
                       _.findWhere($scope.graph, {type: key}).days[4].value++;
                     }
                     else {
-                      _.findWhere($scope.graph, {type: key}).days[5].value++;
+                      if (item.closedTime.getTime() <= (item.date.addDays(240)) ) {
+                        _.findWhere($scope.graph, {type: key}).days[5].value++;
+                      }
+                      else {
+                        if (item.closedTime.getTime() <= (item.date.addDays(365)) ) {
+                          _.findWhere($scope.graph, {type: key}).days[6].value++;
+                        }
+                        else {
+                          if (item.closedTime.getTime() <= (item.date.addDays(730)) ) {
+                            _.findWhere($scope.graph, {type: key}).days[7].value++;
+                          }
+                          else {
+                            _.findWhere($scope.graph, {type: key}).days[8].value++;
+                          }
+                        }
+                      }
                     }
                   }
                 }
@@ -132,16 +159,20 @@ TaskApp.controller('TaskController', function ($scope, $http,_) {
               "v": value,
               "f": value + " items"
             }
-          ]
-        });
+        ]
       });
-
-    $scope.chartObject1 = angular.copy(chartSkeleton);
-    $scope.chartObject1.data.rows = objChart1;
-
+    });
 
     $scope.objCharts = [];
-    var i = 0;
+    var chart1 = angular.copy(chartSkeleton);
+    chart1.data.rows = objChart1;
+    chart1.data.options.title = "Number of issues per type";
+    $scope.objCharts.push(chart1);
+
+
+
+
+    var i = 1;
     angular.forEach($scope.qType, function(value, key) {
       var otherSkel = angular.copy(chartSkeleton);
       otherSkel.data.options.title = key;
@@ -166,17 +197,19 @@ TaskApp.controller('TaskController', function ($scope, $http,_) {
 
   };
 
-  $scope.downloadTasks = function(max,repository) {
-    $scope.tasks = {
-      count : max,
-      task : []
-    };
-    for (count = 1; count <= max; count++) {
+  $scope.downloadTasks = function(min,max,repository) {
+    if ($scope.tasks == null) {
+      $scope.tasks = {
+        count : max,
+        task : []
+      };
+    }
+
+    for (count = min; count <= max; count++) {
 
       $http.get('https://github.com/' + repository + '/issues/'+count).success(function (data) {
         processData(data);
       });
-
     }
   };
 

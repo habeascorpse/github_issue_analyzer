@@ -46,12 +46,16 @@
               <label>Enter the Github Repository. Ex: angular/angular.js</label>
             </div>
             <div class="col s12 input-field">
+              <input type="text" ng-model="min" />
+              <label>from</label>
+            </div>
+            <div class="col s12 input-field">
               <input type="text" ng-model="maxResult" />
-              <label>Number of Issues</label>
+              <label>until</label>
             </div>
           </div>
           <div class="card-action right-align grey lighten-4">
-            <button ng-click="downloadTasks(maxResult,repository)" class="btn btn-large waves-effect waves-light green">
+            <button ng-click="downloadTasks(min,maxResult,repository)" class="btn btn-large waves-effect waves-light green">
               process
               <i class="material-icons right">send</i>
             </button>
@@ -59,7 +63,7 @@
         </div>
       </div>
 
-
+      <!--
     <div class="row">
       <div class="col s12">
         <table class="responsive-table striped" ng-hide="tasks == null">
@@ -81,6 +85,12 @@
           </tbody>
         </div>
     </div>
+  -->
+  <div class="row">
+    <div class="col s12">
+      <h5>Issues: {{tasks.task.length}}</h5>
+    </div>
+  </div>
 
     <div class="row">
       <div class="col s12">
@@ -94,10 +104,6 @@
           </div>
           <div class="card-action right-align grey lighten-4">
             <div class="row">
-              <div class="col s12">
-                <div google-chart chart="chartObject1" ng-hide="showgraph == true"></div>
-              </div>
-
               <div class="col s6 chart-title" ng-repeat="chart in objCharts">
                 <span>{{chart.data.options.title}}</span>
                 <div google-chart chart="chart" ng-hide="showgraph == true"></div>
