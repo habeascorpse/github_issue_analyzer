@@ -1,0 +1,2 @@
+In the Google Chrome Web Browser intall the extension: Allow-Control-Allow-Origin: *
+Avaiable in: https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi?utm_source=chrome-app-launcher-info-dialog
