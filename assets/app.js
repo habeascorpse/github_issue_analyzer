@@ -5,7 +5,7 @@ var TaskApp = angular.module('TaskApp',['googlechart']);
   });
 
 TaskApp.controller('TaskController', function ($scope, $http,_) {
-  $scope.Title = "Github Tasks Analyzer";
+  $scope.Title = "Github Issue Analyzer";
 
   Date.prototype.addDays = function(days) {
       var dat = new Date(this.valueOf());
